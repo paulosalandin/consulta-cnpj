@@ -9,7 +9,7 @@ from openpyxl.styles import PatternFill, Font, Alignment
 
 # ── Configuração da página ──────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Consulta CNPJ - Receita Federal",
+    page_title="Consulta CNPJ - Urbana",
     page_icon="🏢",
     layout="centered",
 )
@@ -22,7 +22,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ── Cabeçalho ───────────────────────────────────────────────────────────────
-st.title("🏢 Consulta CNPJ")
+st.image("urbana.png", width=200)
+st.title("Consulta CNPJ - Urbana")
 st.caption("Consulta situação cadastral na Receita Federal via BrasilAPI")
 st.divider()
 
