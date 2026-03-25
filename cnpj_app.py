@@ -22,9 +22,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ── Cabeçalho ───────────────────────────────────────────────────────────────
-st.image("urbana.png", width=200)
-st.title("Consulta CNPJ - Urbana")
-st.caption("Consulta situação cadastral na Receita Federal via BrasilAPI")
+col_logo, col_titulo = st.columns([1, 4])
+with col_logo:
+    st.image("urbana.png", width=120)
+with col_titulo:
+    st.title("Consulta CNPJ - Urbana")
+    st.caption("Consulta situação cadastral na Receita Federal via BrasilAPI")
 st.divider()
 
 # ── Sidebar ─────────────────────────────────────────────────────────────────
