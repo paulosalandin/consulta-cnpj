@@ -1,0 +1,14 @@
+data/
+__pycache__/
+.pytest_cache/
+*.pyc
+dist/
+
+# --- Segredos (nunca versionar) ---
+.env
+.env.*
+!.env.example
+!.env.*.example
+hana_config*.py
+!hana_config*.example.py
+*.db
