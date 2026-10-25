@@ -1,8 +1,6 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import base64
 import io
-from pathlib import Path
 import pandas as pd
 from datetime import datetime
 from openpyxl import Workbook
@@ -20,23 +18,6 @@ st.set_page_config(
 )
 
 db.inicializar_db()
-
-
-def _html_contador() -> str:
-    """Contador de CNPJs da lista (JavaScript no navegador, arquivo validador_cnpj.js)."""
-    js = (Path(__file__).parent / "validador_cnpj.js").read_text(encoding="utf-8")
-    return f"""
-<style>
-  html {{ background: transparent; }}
-  body {{ margin: 0; padding: 8px 10px; background: #ffffff; border-radius: 8px;
-         font-family: "Source Sans Pro", sans-serif; font-size: 14px; color: #262730; }}
-  #cnpj-status {{ min-height: 20px; }}
-  .ok {{ color: #1b5e20; }} .erro {{ color: #b71c1c; }} .neutro {{ color: #4a4a4a; }}
-</style>
-<div id="cnpj-status" class="neutro" role="status" aria-live="polite">Cole os CNPJs para conferir cada linha.</div>
-<script>{js}</script>
-"""
-
 
 st.markdown("""
 <style>
@@ -232,7 +213,6 @@ with aba_lista:
         label_visibility="collapsed",
         help="Um CNPJ por linha, com ou sem pontuação",
     )
-    components.html(_html_contador(), height=70)
 
     if texto.strip():
         raws = [linha.strip() for linha in texto.strip().splitlines() if linha.strip()]
