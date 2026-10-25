@@ -1,6 +1,8 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import base64
 import io
+from pathlib import Path
 import pandas as pd
 from datetime import datetime
 from openpyxl import Workbook
@@ -18,6 +20,30 @@ st.set_page_config(
 )
 
 db.inicializar_db()
+
+
+def _html_validador() -> str:
+    """Monta o validador de CNPJ (JavaScript no navegador, arquivo validador_cnpj.js)."""
+    js = (Path(__file__).parent / "validador_cnpj.js").read_text(encoding="utf-8")
+    return f"""
+<style>
+  body {{ margin: 0; padding: 10px; background: #ffffff; border-radius: 8px;
+         font-family: "Source Sans Pro", sans-serif; color: #262730; }}
+  label {{ display: block; font-size: 14px; margin-bottom: 4px; }}
+  input {{ width: 100%; box-sizing: border-box; padding: 8px; font-size: 16px;
+          border: 1px solid #767676; border-radius: 6px; }}
+  input:focus {{ outline: 2px solid #1f77b4; outline-offset: 1px; }}
+  #cnpj-status {{ margin-top: 8px; font-size: 14px; min-height: 20px; }}
+  .ok {{ color: #1b5e20; }} .erro {{ color: #b71c1c; }} .neutro {{ color: #4a4a4a; }}
+  html {{ background: transparent; }}
+</style>
+<label for="cnpj-campo">Digite um CNPJ para conferir</label>
+<input id="cnpj-campo" type="text" inputmode="numeric" autocomplete="off"
+       maxlength="18" placeholder="12.345.678/0001-99" aria-describedby="cnpj-status">
+<div id="cnpj-status" class="neutro" role="status" aria-live="polite">Digite um CNPJ para conferir.</div>
+<script>{js}</script>
+"""
+
 
 st.markdown("""
 <style>
@@ -57,6 +83,9 @@ with st.sidebar:
     st.markdown("**API:** BrasilAPI (gratuita, sem limite fixo)")
     st.markdown("**Formato aceito:** com ou sem pontuação")
     st.caption("Ex: 12.345.678/0001-99 ou 12345678000199")
+    st.divider()
+    st.markdown("**Validador rápido de CNPJ**")
+    components.html(_html_validador(), height=150)
     st.divider()
     st.caption(
         "🔒 Os dados consultados (CNPJ, razão social, situação cadastral) são "
