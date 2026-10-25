@@ -1,19 +1,9 @@
-// Validador de CNPJ executado no navegador (JavaScript).
-// Formata o número enquanto a pessoa digita e confere os dígitos verificadores
-// (módulo 11), sem enviar nada ao servidor.
+// Contador de CNPJs da aba "Colar Lista", executado no navegador (JavaScript).
+// Enquanto a pessoa digita ou cola, confere cada linha (formato e dígitos
+// verificadores, módulo 11) e mostra o resumo, sem enviar nada ao servidor.
 
 function limparCnpj(valor) {
-  return String(valor).replace(/\D/g, "").slice(0, 14);
-}
-
-function formatarCnpj(digitos) {
-  const d = limparCnpj(digitos);
-  let r = d.slice(0, 2);
-  if (d.length > 2) r += "." + d.slice(2, 5);
-  if (d.length > 5) r += "." + d.slice(5, 8);
-  if (d.length > 8) r += "/" + d.slice(8, 12);
-  if (d.length > 12) r += "-" + d.slice(12, 14);
-  return r;
+  return String(valor).replace(/\D/g, "");
 }
 
 function calcularDigito(base) {
@@ -37,32 +27,86 @@ function validarCnpj(valor) {
   return d.endsWith(String(dv1) + String(dv2));
 }
 
-function mensagemStatus(valor) {
-  const d = limparCnpj(valor);
-  if (d.length === 0) return { tipo: "neutro", texto: "Digite um CNPJ para conferir." };
-  if (d.length < 14) {
-    return { tipo: "neutro", texto: "Faltam " + (14 - d.length) + " dígito(s)." };
-  }
-  return validarCnpj(d)
-    ? { tipo: "ok", texto: "✔ CNPJ válido (dígitos verificadores corretos)." }
-    : { tipo: "erro", texto: "✖ CNPJ inválido: os dígitos verificadores não conferem." };
+// Classifica cada linha não vazia do texto. Os números de linha são os do campo.
+function analisarLista(texto) {
+  const r = { total: 0, validos: 0, formatoInvalido: [], digitoInvalido: [] };
+  String(texto).split(/\r?\n/).forEach(function (linha, i) {
+    if (!linha.trim()) return;
+    r.total++;
+    const d = limparCnpj(linha);
+    if (d.length !== 14) r.formatoInvalido.push(i + 1);
+    else if (!validarCnpj(d)) r.digitoInvalido.push(i + 1);
+    else r.validos++;
+  });
+  return r;
 }
 
-function iniciarValidador() {
-  const campo = document.getElementById("cnpj-campo");
+function plural(n, singular, pluralTxt) {
+  return n + " " + (n === 1 ? singular : pluralTxt);
+}
+
+function listarLinhas(linhas) {
+  const mostra = linhas.slice(0, 8).join(", ");
+  return (linhas.length === 1 ? "linha " : "linhas ") + (linhas.length > 8 ? mostra + "…" : mostra);
+}
+
+function resumoLista(texto) {
+  const a = analisarLista(texto);
+  if (a.total === 0) return { tipo: "neutro", texto: "Cole os CNPJs para conferir cada linha." };
+  const partes = [plural(a.validos, "válido", "válidos")];
+  if (a.formatoInvalido.length) {
+    partes.push(plural(a.formatoInvalido.length, "com formato errado", "com formato errado") +
+      " (" + listarLinhas(a.formatoInvalido) + ")");
+  }
+  if (a.digitoInvalido.length) {
+    partes.push(plural(a.digitoInvalido.length, "com dígito verificador errado", "com dígito verificador errado") +
+      " (" + listarLinhas(a.digitoInvalido) + ")");
+  }
+  const problemas = a.formatoInvalido.length + a.digitoInvalido.length;
+  return {
+    tipo: problemas ? "erro" : "ok",
+    texto: (problemas ? "⚠ " : "✔ ") + plural(a.total, "linha", "linhas") + ": " + partes.join("; ") + ".",
+  };
+}
+
+function iniciarContador() {
   const status = document.getElementById("cnpj-status");
-  if (!campo || !status) return;
-  campo.addEventListener("input", function () {
-    campo.value = formatarCnpj(campo.value);
-    const m = mensagemStatus(campo.value);
+  if (!status) return;
+  let campo = null;
+  let timer = null;
+
+  function atualizar() {
+    const m = resumoLista(campo.value);
     status.textContent = m.texto;
     status.className = m.tipo;
-    campo.setAttribute("aria-invalid", m.tipo === "erro" ? "true" : "false");
-  });
+  }
+
+  function ligar(t) {
+    campo = t;
+    campo.addEventListener("input", function () {
+      clearTimeout(timer);
+      timer = setTimeout(atualizar, 400); // evita anunciar a cada tecla
+    });
+    atualizar();
+  }
+
+  // O campo é criado pelo Streamlit depois deste quadro: procura por alguns segundos.
+  let tentativas = 0;
+  const busca = setInterval(function () {
+    tentativas++;
+    let t = null;
+    try {
+      t = window.parent.document.querySelector('textarea[aria-label="Lista de CNPJs para consulta"]');
+    } catch (e) {
+      /* sem acesso ao documento pai: o contador fica desligado */
+    }
+    if (t) { clearInterval(busca); ligar(t); }
+    else if (tentativas > 40) { clearInterval(busca); status.textContent = ""; }
+  }, 250);
 }
 
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { limparCnpj, formatarCnpj, validarCnpj, mensagemStatus };
+  module.exports = { limparCnpj, validarCnpj, analisarLista, resumoLista };
 } else {
-  iniciarValidador();
+  iniciarContador();
 }
