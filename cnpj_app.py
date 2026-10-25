@@ -42,10 +42,21 @@ def _html_frete_ao_vivo(uf: str) -> str:
     return f"""
 <style>
   html {{ background: transparent; }}
-  body {{ margin: 0; padding: 8px 10px; background: #ffffff; border-radius: 8px;
-         font-family: "Source Sans Pro", sans-serif; font-size: 14px; color: #262730; }}
+  :root {{ --texto: #fafafa; --fonte: "Source Sans Pro", sans-serif; }}
+  @media (prefers-color-scheme: light) {{ :root {{ --texto: #31333f; }} }}
+  body {{ margin: 0; font-family: var(--fonte); color: var(--texto); }}
+  #frete-caixa {{ padding: 10px 14px; border-radius: 8px; border-left: 4px solid #ff4b4b;
+                  background: rgba(128, 128, 128, 0.14); }}
+  #frete-titulo {{ font-size: 12px; opacity: 0.85; margin-bottom: 2px; }}
+  #frete-valores {{ font-size: 18px; font-weight: 600; }}
+  .item {{ display: inline-block; margin-right: 18px; white-space: nowrap; }}
+  #frete-nota {{ font-size: 12px; opacity: 0.85; margin-top: 2px; }}
 </style>
-<div id="frete-status" role="status" aria-live="polite">Informe as quantidades para ver a estimativa ao vivo.</div>
+<div id="frete-caixa">
+  <div id="frete-titulo">Estimativa ao vivo</div>
+  <div id="frete-valores" role="status" aria-live="polite"><span class="item">Informe as quantidades acima.</span></div>
+  <div id="frete-nota"></div>
+</div>
 <script>const CONFIG_FRETE = {json.dumps(config)};</script>
 <script>{js}</script>
 """
@@ -313,7 +324,7 @@ with aba_frete:
             qtd_camisa = c1.number_input("Camisas", min_value=0, value=0, step=1, help="Peso unitário: 0,20 kg")
             qtd_calca  = c2.number_input("Calças", min_value=0, value=0, step=1, help="Peso unitário: 0,50 kg")
             qtd_blusa  = c3.number_input("Blusas", min_value=0, value=0, step=1, help="Peso unitário: 0,30 kg")
-            components.html(_html_frete_ao_vivo(dados_cliente["uf"]), height=70)
+            components.html(_html_frete_ao_vivo(dados_cliente["uf"]), height=96)
 
             if st.button("📐 Calcular Frete", type="primary", use_container_width=True):
                 if qtd_camisa + qtd_calca + qtd_blusa == 0:

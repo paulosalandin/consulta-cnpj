@@ -37,17 +37,42 @@ function formatarNumero(n, casas) {
   return n.toFixed(casas).replace(".", ",");
 }
 
+// Partes exibidas: os valores em destaque e a nota explicativa.
+function partesEstimativa(e) {
+  if (e.pecas === 0) return { valores: ["Informe as quantidades acima."], nota: "" };
+  return {
+    valores: [
+      "⚖️ " + formatarNumero(e.peso, 2) + " kg",
+      "💰 R$ " + formatarNumero(e.valor, 2),
+      "📅 " + e.prazo + " dias úteis",
+    ],
+    nota: "Região " + e.regiao + " · valor simulado. Clique em Calcular Frete para registrar.",
+  };
+}
+
 function textoEstimativa(e) {
-  if (e.pecas === 0) return "Informe as quantidades para ver a estimativa ao vivo.";
-  return "Estimativa ao vivo: " + formatarNumero(e.peso, 2) + " kg · R$ " + formatarNumero(e.valor, 2) +
-    " · " + e.prazo + " dias úteis (região " + e.regiao + "). Valor simulado: clique em Calcular Frete para registrar.";
+  const p = partesEstimativa(e);
+  return p.valores.join(" · ") + (p.nota ? " — " + p.nota : "");
+}
+
+// Herda cor e fonte da página do Streamlit (tema claro ou escuro), para o bloco
+// combinar com o restante do site. Sem acesso à página, vale o CSS padrão.
+function aplicarTema() {
+  try {
+    const app = window.parent.document.querySelector(".stApp") || window.parent.document.body;
+    const cs = window.parent.getComputedStyle(app);
+    document.documentElement.style.setProperty("--texto", cs.color);
+    if (cs.fontFamily) document.documentElement.style.setProperty("--fonte", cs.fontFamily);
+  } catch (e) { /* mantém o padrão */ }
 }
 
 function iniciarFreteAoVivo() {
-  const status = document.getElementById("frete-status");
-  if (!status || typeof CONFIG_FRETE === "undefined") return;
+  const valores = document.getElementById("frete-valores");
+  const nota = document.getElementById("frete-nota");
+  if (!valores || !nota || typeof CONFIG_FRETE === "undefined") return;
   const rotulos = ["Camisas", "Calças", "Blusas"];
   let ultimo = "";
+  aplicarTema();
 
   function campo(rotulo) {
     try {
@@ -61,11 +86,20 @@ function iniciarFreteAoVivo() {
     const campos = rotulos.map(campo);
     if (campos.some(function (c) { return !c; })) return;
     const q = campos.map(function (c) { return quantidade(c.value); });
-    const texto = textoEstimativa(calcularEstimativa(CONFIG_FRETE, q[0], q[1], q[2], CONFIG_FRETE.uf));
-    if (texto !== ultimo) { // só anuncia quando muda
-      ultimo = texto;
-      status.textContent = texto;
-    }
+    const e = calcularEstimativa(CONFIG_FRETE, q[0], q[1], q[2], CONFIG_FRETE.uf);
+    const chave = textoEstimativa(e);
+    if (chave === ultimo) return; // só atualiza (e anuncia) quando muda
+    ultimo = chave;
+    const partes = partesEstimativa(e);
+    valores.textContent = "";
+    partes.valores.forEach(function (v) {
+      const span = document.createElement("span");
+      span.className = "item";
+      span.textContent = v;
+      valores.appendChild(span);
+    });
+    nota.textContent = partes.nota;
+    aplicarTema();
   }
 
   // Lê os campos com frequência: cobre digitação e os botões + / − do Streamlit.
@@ -74,7 +108,7 @@ function iniciarFreteAoVivo() {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { quantidade, regiaoDaUf, calcularEstimativa, textoEstimativa };
+  module.exports = { quantidade, regiaoDaUf, calcularEstimativa, partesEstimativa, textoEstimativa };
 } else {
   iniciarFreteAoVivo();
 }
