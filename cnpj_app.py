@@ -1,6 +1,9 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import base64
 import io
+import json
+from pathlib import Path
 import pandas as pd
 from datetime import datetime
 from openpyxl import Workbook
@@ -18,6 +21,35 @@ st.set_page_config(
 )
 
 db.inicializar_db()
+
+
+def _html_frete_ao_vivo(uf: str) -> str:
+    """Estimativa de frete ao vivo (JavaScript no navegador, arquivo frete_ao_vivo.js).
+
+    As tabelas vêm do frete.py, para existir uma única fonte de pesos e tarifas.
+    """
+    config = {
+        "pesoUnitario": frete.PESO_UNITARIO_KG,
+        "regioes": {
+            nome: {k: v for k, v in dados.items() if k != "ufs"}
+            for nome, dados in frete.TABELA_REGIOES.items()
+        },
+        "regiaoPorUf": frete.REGIAO_POR_UF,
+        "regiaoPadrao": frete.REGIAO_PADRAO,
+        "uf": uf,
+    }
+    js = (Path(__file__).parent / "frete_ao_vivo.js").read_text(encoding="utf-8")
+    return f"""
+<style>
+  html {{ background: transparent; }}
+  body {{ margin: 0; padding: 8px 10px; background: #ffffff; border-radius: 8px;
+         font-family: "Source Sans Pro", sans-serif; font-size: 14px; color: #262730; }}
+</style>
+<div id="frete-status" role="status" aria-live="polite">Informe as quantidades para ver a estimativa ao vivo.</div>
+<script>const CONFIG_FRETE = {json.dumps(config)};</script>
+<script>{js}</script>
+"""
+
 
 st.markdown("""
 <style>
@@ -281,6 +313,7 @@ with aba_frete:
             qtd_camisa = c1.number_input("Camisas", min_value=0, value=0, step=1, help="Peso unitário: 0,20 kg")
             qtd_calca  = c2.number_input("Calças", min_value=0, value=0, step=1, help="Peso unitário: 0,50 kg")
             qtd_blusa  = c3.number_input("Blusas", min_value=0, value=0, step=1, help="Peso unitário: 0,30 kg")
+            components.html(_html_frete_ao_vivo(dados_cliente["uf"]), height=70)
 
             if st.button("📐 Calcular Frete", type="primary", use_container_width=True):
                 if qtd_camisa + qtd_calca + qtd_blusa == 0:
