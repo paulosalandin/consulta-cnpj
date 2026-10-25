@@ -1,4 +1,5 @@
 import streamlit as st
+import base64
 import io
 import pandas as pd
 from datetime import datetime
@@ -28,7 +29,14 @@ st.markdown("""
 # ── Cabeçalho ───────────────────────────────────────────────────────────────
 col_logo, col_titulo = st.columns([1, 4])
 with col_logo:
-    st.image("urbana.png", width=120, caption="Logo da Urbana")
+    with open("urbana.png", "rb") as _f:
+        _logo_b64 = base64.b64encode(_f.read()).decode()
+    st.markdown(
+        f'<img src="data:image/png;base64,{_logo_b64}" alt="Logo da Urbana" '
+        'style="width:120px;max-width:100%;">',
+        unsafe_allow_html=True,
+    )
+    st.caption("Logo da Urbana")
 with col_titulo:
     st.title("Consulta CNPJ - Urbana")
     st.caption("Consulta situação cadastral na Receita Federal via BrasilAPI")
