@@ -36,7 +36,6 @@ with col_logo:
         'style="width:120px;max-width:100%;">',
         unsafe_allow_html=True,
     )
-    st.caption("Logo da Urbana")
 with col_titulo:
     st.title("Consulta CNPJ - Urbana")
     st.caption("Consulta situação cadastral na Receita Federal via BrasilAPI")
