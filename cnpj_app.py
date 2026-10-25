@@ -326,9 +326,9 @@ with aba_frete:
             qtd_blusa  = c3.number_input("Blusas", min_value=0, value=0, step=1, help="Peso unitário: 0,30 kg")
             components.html(_html_frete_ao_vivo(dados_cliente["uf"]), height=96)
 
-            if st.button("📐 Calcular Frete", type="primary", use_container_width=True):
+            if st.button("💾 Salvar Frete", type="primary", use_container_width=True):
                 if qtd_camisa + qtd_calca + qtd_blusa == 0:
-                    st.warning("Informe ao menos uma peça para calcular o frete.")
+                    st.warning("Informe ao menos uma peça para salvar o frete.")
                 else:
                     peso = frete.calcular_peso_total(qtd_camisa, qtd_calca, qtd_blusa)
                     resultado_frete = frete.calcular_frete(dados_cliente["uf"], peso)

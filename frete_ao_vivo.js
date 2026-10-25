@@ -1,8 +1,8 @@
 // Estimativa de frete ao vivo, executada no navegador (JavaScript).
 // Recalcula peso, valor e prazo enquanto a pessoa altera as quantidades, sem
-// esperar o botão "Calcular Frete". As tabelas (pesos, tarifas, regiões) vêm do
-// frete.py, injetadas pelo servidor em CONFIG_FRETE: aqui só existe a fórmula.
-// O botão continua sendo o que grava o cálculo no histórico.
+// precisar de botão. As tabelas (pesos, tarifas, regiões) vêm do frete.py,
+// injetadas pelo servidor em CONFIG_FRETE: aqui só existe a fórmula.
+// O botão "Salvar Frete" é o que grava o cálculo no histórico.
 
 function quantidade(valor) {
   const n = parseInt(valor, 10);
@@ -46,7 +46,7 @@ function partesEstimativa(e) {
       "💰 R$ " + formatarNumero(e.valor, 2),
       "📅 " + e.prazo + " dias úteis",
     ],
-    nota: "Região " + e.regiao + " · valor simulado. Clique em Calcular Frete para registrar.",
+    nota: "Região " + e.regiao + " · valor simulado. Clique em Salvar Frete para registrar no histórico.",
   };
 }
 
